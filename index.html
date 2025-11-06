@@ -1,276 +1,550 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Puter Claude Chat — claude-sonnet-4-5</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude AI Chat</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <!-- Puter.js (no API keys, client-side) -->
-  <script src="https://js.puter.com/v2/"></script>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-  <!-- Highlight.js for code rendering -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
 
-  <style>
-    :root {
-      --bg: #0f1724;
-      --card: #0b1220;
-      --muted: #94a3b8;
-      --accent: #7c3aed;
-      --glass: rgba(255,255,255,0.03);
-    }
-    html,body { height:100%; margin:0; font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#07102a 0%, #071827 100%); color: #e6eef8; }
-    .app { max-width:1100px; margin:28px auto; display:grid; grid-template-columns: 1fr 360px; gap:18px; padding:18px; }
-    .card { background:var(--card); border-radius:14px; padding:14px; box-shadow: 0 6px 24px rgba(2,6,23,0.6); }
-    header { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
-    header h1 { font-size:18px; margin:0; }
-    .chat { display:flex; flex-direction:column; height:76vh; }
-    .messages { overflow:auto; padding:12px; flex:1; display:flex; flex-direction:column; gap:10px; }
-    .msg { max-width:80%; padding:12px; border-radius:10px; word-break:break-word; font-size:14px; }
-    .user { align-self:flex-end; background:linear-gradient(90deg,#3b82f6,#06b6d4); color:#021129; }
-    .assistant { align-self:flex-start; background:var(--glass); color:var(--muted); border:1px solid rgba(255,255,255,0.03); }
-    .meta { font-size:12px; color:var(--muted); margin-bottom:8px; }
-    .inputRow { display:flex; gap:8px; margin-top:10px; }
-    .inputRow textarea { flex:1; min-height:48px; max-height:160px; border-radius:10px; padding:10px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; resize:vertical; }
-    .btn { background:var(--accent); border:0; color:white; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
-    .sidebar { display:flex; flex-direction:column; gap:12px; height:76vh; }
-    .uploadDrop { border:1px dashed rgba(255,255,255,0.06); padding:12px; border-radius:10px; min-height:120px; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--muted); }
-    .filesList { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; }
-    .fileItem { background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03)); padding:8px; border-radius:8px; font-size:13px; }
-    .small { font-size:12px; color:var(--muted); }
-    pre.code { background:#0b1220; padding:10px; border-radius:8px; overflow:auto; font-size:13px; color:#dff1ff; }
-    footer { margin-top:8px; text-align:right; font-size:12px; color:var(--muted); }
-    .hint { font-size:13px; color:var(--muted); }
-    /* responsive */
-    @media (max-width:980px) { .app { grid-template-columns: 1fr; } .sidebar { order:2; } }
-  </style>
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .model-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .assistant .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 18px;
+            border-radius: 15px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-content pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .message-content code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+
+        .message-content p {
+            margin: 8px 0;
+        }
+
+        .message-content p:first-child {
+            margin-top: 0;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 5px 0;
+        }
+
+        .message-content h1, .message-content h2, .message-content h3 {
+            margin: 15px 0 10px 0;
+            color: #667eea;
+        }
+
+        .code-header {
+            background: #2d2d2d;
+            color: #999;
+            padding: 8px 15px;
+            border-radius: 8px 8px 0 0;
+            font-size: 12px;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: -10px;
+        }
+
+        .copy-btn {
+            background: #4a4a4a;
+            border: none;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5a5a5a;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            max-height: 120px;
+        }
+
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 15px 18px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c00;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c00;
+        }
+    </style>
 </head>
 <body>
-  <div class="app">
-    <div class="card chat">
-      <header>
-        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect rx='8' width='36' height='36' fill='%237c3aed'/><text x='50%' y='58%' font-size='18' text-anchor='middle' fill='white' font-family='Arial'>C</text></svg>" alt="logo" style="width:36px;height:36px;border-radius:8px"/>
-        <div>
-          <h1>Puter Claude (claude-sonnet-4-5) — Code helper</h1>
-          <div class="small">Upload code files, ask questions, stream responses.</div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Claude AI Chat</h1>
+            <span class="model-badge">Claude Sonnet 4.5</span>
         </div>
-      </header>
-
-      <div class="messages" id="messages" aria-live="polite"></div>
-
-      <div class="inputRow">
-        <textarea id="messageInput" placeholder="Write a prompt, or describe what you want the assistant to do with uploaded files (e.g. 'Review main.py and suggest performance improvements')"></textarea>
-        <button class="btn" id="sendBtn">Send</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-        <div class="small">Model: <strong>claude-sonnet-4-5</strong></div>
-        <div class="small hint">Note: Puter.js runs client-side; no API key needed — usage is billed per Puter’s user-pays model. See docs. </div>
-      </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <div class="message assistant">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <p>Hello! I'm Claude, powered by Puter.js. I'm especially good at helping with code and technical tasks. How can I assist you today?</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Ask me anything about code, scripts, or web development..."
+                    rows="1"
+                ></textarea>
+            </div>
+            <button id="sendBtn">Send</button>
+        </div>
     </div>
 
-    <aside class="card sidebar">
-      <div>
-        <strong>Upload code files</strong>
-        <div class="small">Drag & drop or select text files (JS, PY, TXT). Files are read client-side and added to the message sent to Claude.</div>
-      </div>
+    <script>
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
 
-      <label class="uploadDrop" id="dropZone">
-        Drop files here or click to select
-        <input type="file" id="fileInput" multiple style="display:none" accept=".js,.py,.txt,.json,.md,.ts,.jsx,.tsx"/>
-      </label>
+        // Configure marked for better rendering
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
 
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong>Files to attach</strong>
-          <button id="clearFiles" class="btn" style="background:#ef4444;padding:6px 10px;font-size:13px">Clear</button>
-        </div>
-        <div class="filesList" id="filesList"></div>
-      </div>
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
 
-      <div style="margin-top:auto;">
-        <div class="small" style="margin-bottom:8px">When sending, file contents will be prepended with a header like:</div>
-        <pre class="small" style="background:transparent;border-radius:6px;border:1px solid rgba(255,255,255,0.03);padding:8px"><code>-- filename: main.py -- (language: python)
-&lt;file contents&gt;</code></pre>
-        <footer>
-          <div class="small">Puter.js script: <code>https://js.puter.com/v2/</code>. Models available include <code>claude-sonnet-4-5</code>. (See docs.)</div>
-        </footer>
-      </div>
-    </aside>
-  </div>
-
-  <script>
-    // Basic DOM hooks
-    const messagesEl = document.getElementById('messages');
-    const sendBtn = document.getElementById('sendBtn');
-    const input = document.getElementById('messageInput');
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const filesListEl = document.getElementById('filesList');
-    const clearFilesBtn = document.getElementById('clearFiles');
-
-    // Keep files in memory (client-side)
-    let uploadedFiles = []; // {name, type, content}
-
-    // Utility: add message
-    function addMessage(contentHTML, type='assistant', meta='') {
-      const div = document.createElement('div');
-      div.className = 'msg ' + (type === 'user' ? 'user' : 'assistant');
-      if (meta) {
-        const m = document.createElement('div');
-        m.className = 'meta';
-        m.textContent = meta;
-        div.appendChild(m);
-      }
-      const inner = document.createElement('div');
-      inner.innerHTML = contentHTML;
-      div.appendChild(inner);
-      messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    // File handling
-    function renderFilesList() {
-      filesListEl.innerHTML = '';
-      uploadedFiles.forEach((f, idx) => {
-        const el = document.createElement('div');
-        el.className = 'fileItem';
-        el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${escapeHtml(f.name)}</strong> <span class="small">(${f.size} bytes)</span></div>
-          <div style="display:flex;gap:8px">
-            <button data-idx="${idx}" class="btn previewBtn" style="background:#06b6d4;padding:6px 8px;font-size:12px">Preview</button>
-            <button data-idx="${idx}" class="btn rmBtn" style="background:#ef4444;padding:6px 8px;font-size:12px">Remove</button>
-          </div>
-        </div>`;
-        filesListEl.appendChild(el);
-      });
-    }
-
-    // Escape HTML helper
-    function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    // read files from input
-    async function readFiles(fileList) {
-      for (const f of Array.from(fileList)) {
-        // only read text files
-        const text = await f.text();
-        uploadedFiles.push({ name: f.name, type: f.type || guessLangFromName(f.name), size: text.length, content: text });
-      }
-      renderFilesList();
-    }
-
-    function guessLangFromName(name) {
-      const ext = name.split('.').pop().toLowerCase();
-      if (ext === 'py') return 'python';
-      if (ext === 'js' || ext === 'mjs' || ext === 'cjs') return 'javascript';
-      if (ext === 'ts') return 'typescript';
-      if (ext === 'json') return 'json';
-      if (ext === 'md') return 'markdown';
-      return 'text';
-    }
-
-    // drag and drop
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#7c3aed'; });
-    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = ''; if (e.dataTransfer.files) readFiles(e.dataTransfer.files); });
-
-    fileInput.addEventListener('change', (e) => readFiles(e.target.files));
-    clearFilesBtn.addEventListener('click', () => { uploadedFiles = []; renderFilesList(); });
-
-    // delegate preview/remove buttons
-    filesListEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const idx = Number(btn.getAttribute('data-idx'));
-      if (btn.classList.contains('previewBtn')) {
-        const f = uploadedFiles[idx];
-        const codeHtml = `<div class="small">Previewing <strong>${escapeHtml(f.name)}</strong> (language: ${escapeHtml(f.type)})</div>
-          <pre class="code"><code>${escapeHtml(f.content.slice(0, 20000))}${f.content.length>20000 ? '\n\n...truncated...' : ''}</code></pre>`;
-        addMessage(codeHtml, 'assistant', `file: ${f.name}`);
-        // highlight
-        setTimeout(() => { document.querySelectorAll('pre.code code').forEach((block) => hljs.highlightBlock(block)); }, 80);
-      } else if (btn.classList.contains('rmBtn')) {
-        uploadedFiles.splice(idx,1);
-        renderFilesList();
-      }
-    });
-
-    // Send handler
-    sendBtn.addEventListener('click', () => sendPrompt());
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { sendPrompt(); } });
-
-    // main send function
-    async function sendPrompt() {
-      const userText = input.value.trim();
-      if (!userText && uploadedFiles.length === 0) {
-        alert('Please write a prompt or attach files.');
-        return;
-      }
-
-      // show user message
-      const filesSummary = uploadedFiles.map(f => f.name).join(', ');
-      addMessage(`<div>${escapeHtml(userText || '(no prompt — sending files)')}</div><div class="small">Attached: ${escapeHtml(filesSummary || 'none')}</div>`, 'user', 'You');
-
-      // Build the message string to send to Claude
-      let composite = '';
-      if (uploadedFiles.length) {
-        for (const f of uploadedFiles) {
-          composite += `-- filename: ${f.name} -- (language: ${f.type})\n`;
-          composite += f.content + '\n\n';
-        }
-        composite += `-- end files --\n\n`;
-      }
-      composite += `User prompt: ${userText}\n\nInstructions: Please analyze the above files and respond. If they are code files, give clear, actionable suggestions, point out bugs, offer improvements, and provide example edits. When giving code snippets, include only the changed parts in a patch-like style.`;
-
-      // Send to Puter.js (client side)
-      // Use model: 'claude-sonnet-4-5' and stream: true for live streaming
-      addMessage(`Waiting for assistant (streaming)...`, 'assistant', 'Assistant');
-
-      try {
-        const stream = await puter.ai.chat(composite, { model: 'claude-sonnet-4-5', stream: true });
-
-        // remove the "waiting" placeholder and replace with streaming content
-        // We'll append to the last assistant message
-        let assistantNode = null;
-        function createAssistantNode() {
-          assistantNode = document.createElement('div');
-          assistantNode.className = 'msg assistant';
-          const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = 'Assistant (streaming)';
-          const content = document.createElement('div'); content.className = 'streamingContent'; assistantNode.appendChild(meta); assistantNode.appendChild(content);
-          messagesEl.appendChild(assistantNode);
-          messagesEl.scrollTop = messagesEl.scrollHeight;
-        }
-
-        // if the stream is an async iterator
-        if (stream[Symbol.asyncIterator]) {
-          createAssistantNode();
-          const contentEl = assistantNode.querySelector('.streamingContent');
-          for await (const chunk of stream) {
-            // chunk may be object or string depending on Puter API; try to extract text
-            const text = (typeof chunk === 'string') ? chunk : (chunk?.text ?? chunk?.message?.content?.[0]?.text ?? '');
-            if (text) {
-              // append text (escape HTML, keep simple newlines)
-              contentEl.innerHTML = escapeHtml(contentEl.textContent + text).replace(/\n/g,'<br/>');
-              messagesEl.scrollTop = messagesEl.scrollHeight;
+        // Send message on Enter (Shift+Enter for new line)
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
             }
-          }
-        } else {
-          // not streaming; plain promise
-          const response = await stream;
-          addMessage(`<div>${escapeHtml(response?.message?.content?.[0]?.text || String(response))}</div>`, 'assistant', 'Assistant');
-        }
-      } catch (err) {
-        console.error(err);
-        addMessage(`<div class="small">Error: ${escapeHtml(String(err))}</div>`, 'assistant', 'Assistant');
-      } finally {
-        input.value = '';
-        // reset files? keep them (user may want to iterate). If you want to auto-clear: uploadedFiles = []; renderFilesList();
-      }
-    }
+        });
 
-    // small note: Puter.js docs show the script and models like claude-sonnet-4-5. See Puter docs for more features (function-calling etc).
-    // Reference: https://developer.puter.com/tutorials/free-unlimited-claude-35-sonnet-api/
-  </script>
+        sendBtn.addEventListener('click', sendMessage);
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (role === 'assistant') {
+                // Parse markdown and highlight code
+                let html = marked.parse(content);
+                
+                // Add code headers and copy buttons
+                html = html.replace(/<pre><code class="language-(\w+)">/g, function(match, lang) {
+                    return `<div class="code-header">
+                        <span>${lang}</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div><pre><code class="language-${lang}">`;
+                });
+                
+                contentDiv.innerHTML = html;
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            
+            scrollToBottom();
+        }
+
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = '🤖';
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            
+            typingDiv.appendChild(avatar);
+            typingDiv.appendChild(indicator);
+            messagesContainer.appendChild(typingDiv);
+            
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Disable input
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // Show typing indicator
+            addTypingIndicator();
+
+            try {
+                // Call Puter AI with streaming
+                const response = await puter.ai.chat(message, {
+                    model: 'claude-sonnet-4-5',
+                    stream: true
+                });
+
+                removeTypingIndicator();
+                
+                let fullResponse = '';
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message assistant';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = '🤖';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+                messagesContainer.appendChild(messageDiv);
+
+                // Stream the response
+                for await (const part of response) {
+                    if (part?.text) {
+                        fullResponse += part.text;
+                        
+                        // Parse markdown and highlight code
+                        let html = marked.parse(fullResponse);
+                        
+                        // Add code headers and copy buttons
+                        html = html.replace(/<pre><code class="language-(\w+)">/g, function(match, lang) {
+                            return `<div class="code-header">
+                                <span>${lang}</span>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div><pre><code class="language-${lang}">`;
+                        });
+                        
+                        contentDiv.innerHTML = html;
+                        scrollToBottom();
+                    }
+                }
+
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Error:', error);
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message assistant';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = '🤖';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = `<div class="error-message">Sorry, I encountered an error: ${error.message || 'Unknown error occurred'}</div>`;
+                
+                errorDiv.appendChild(avatar);
+                errorDiv.appendChild(contentDiv);
+                messagesContainer.appendChild(errorDiv);
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-header').nextElementSibling;
+            const code = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Focus input on load
+        messageInput.focus();
+    </script>
 </body>
 </html>
