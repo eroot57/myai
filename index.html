@@ -275,6 +275,12 @@
             border-bottom-left-radius: 5px;
         }
 
+        .message-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
         .message-content pre {
             background: #1e1e1e;
             padding: 15px;
@@ -347,12 +353,34 @@
             background: #10b981;
         }
 
+        .attached-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .user .attached-file {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         .input-container {
             padding: 20px;
             background: white;
             border-top: 1px solid #e5e7eb;
             display: flex;
+            flex-direction: column;
             gap: 12px;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
         }
 
         .input-wrapper {
@@ -377,6 +405,28 @@
             border-color: #667eea;
         }
 
+        .file-upload-btn {
+            padding: 15px;
+            background: #f3f4f6;
+            color: #667eea;
+            border: 2px solid #e5e7eb;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-upload-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
         #sendBtn {
             padding: 15px 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -398,6 +448,52 @@
         #sendBtn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        .attached-files-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .file-preview {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            max-width: 200px;
+        }
+
+        .file-preview img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .file-preview-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .remove-file-btn {
+            background: #ef4444;
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .typing-indicator {
@@ -464,23 +560,53 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
             .app-container {
                 flex-direction: column;
+                height: 100vh;
+                max-width: 100%;
+                gap: 0;
             }
 
             .sidebar {
                 width: 100%;
-                height: 200px;
+                height: 30%;
+                border-radius: 0;
+            }
+
+            .chat-container {
+                width: 100%;
+                height: 70%;
+                border-radius: 0;
             }
 
             .chat-list {
                 display: flex;
-                overflow-x: auto;
-                overflow-y: hidden;
+                flex-direction: column;
             }
 
-            .chat-item {
-                min-width: 200px;
+            .chat-header h1 {
+                font-size: 18px;
+            }
+
+            .model-badge {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+
+            .messages-container {
+                padding: 15px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .input-container {
+                padding: 15px;
             }
         }
     </style>
@@ -510,29 +636,34 @@
                 <div class="message assistant">
                     <div class="message-avatar">🤖</div>
                     <div class="message-content">
-                        <p>Hello! I'm Claude, powered by Puter.js. I'm especially good at helping with code and technical tasks. How can I assist you today?</p>
+                        <p>Hello! I'm Claude, powered by Puter.js. I can help with code, analyze images, and read documents. How can I assist you today?</p>
                     </div>
                 </div>
             </div>
             
             <div class="input-container">
-                <div class="input-wrapper">
-                    <textarea 
-                        id="messageInput" 
-                        placeholder="Ask me anything about code, scripts, or web development..."
-                        rows="1"
-                    ></textarea>
+                <div class="attached-files-preview" id="attachedFilesPreview"></div>
+                <div class="input-actions">
+                    <button class="file-upload-btn" id="fileUploadBtn" title="Upload file or image">📎</button>
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.txt,.doc,.docx" multiple>
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            placeholder="Ask me anything or upload a file..."
+                            rows="1"
+                        ></textarea>
+                    </div>
+                    <button id="sendBtn">Send</button>
                 </div>
-                <button id="sendBtn">Send</button>
             </div>
         </div>
     </div>
 
     <script>
-        // State management
         let chats = [];
         let currentChatId = null;
         let conversationHistory = [];
+        let attachedFiles = [];
 
         const messagesContainer = document.getElementById('messagesContainer');
         const messageInput = document.getElementById('messageInput');
@@ -540,8 +671,10 @@
         const newChatBtn = document.getElementById('newChatBtn');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const chatList = document.getElementById('chatList');
+        const fileUploadBtn = document.getElementById('fileUploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const attachedFilesPreview = document.getElementById('attachedFilesPreview');
 
-        // Configure marked for better rendering
         marked.setOptions({
             highlight: function(code, lang) {
                 if (lang && hljs.getLanguage(lang)) {
@@ -553,7 +686,6 @@
             gfm: true
         });
 
-        // Load chats from memory
         function loadChats() {
             const saved = localStorage.getItem('claudeChats');
             if (saved) {
@@ -565,19 +697,17 @@
             }
         }
 
-        // Save chats to memory
         function saveChats() {
             localStorage.setItem('claudeChats', JSON.stringify(chats));
         }
 
-        // Create new chat
         function createNewChat() {
             const newChat = {
                 id: Date.now().toString(),
                 title: 'New Chat',
                 messages: [{
                     role: 'assistant',
-                    content: "Hello! I'm Claude, powered by Puter.js. I'm especially good at helping with code and technical tasks. How can I assist you today?"
+                    content: "Hello! I'm Claude, powered by Puter.js. I can help with code, analyze images, and read documents. How can I assist you today?"
                 }],
                 date: new Date().toISOString()
             };
@@ -587,25 +717,24 @@
             loadChat(newChat.id);
         }
 
-        // Load specific chat
         function loadChat(chatId) {
             const chat = chats.find(c => c.id === chatId);
             if (!chat) return;
 
             currentChatId = chatId;
             conversationHistory = [...chat.messages];
+            attachedFiles = [];
+            renderAttachedFiles();
             
-            // Clear and render messages
             messagesContainer.innerHTML = '';
             chat.messages.forEach(msg => {
-                addMessage(msg.role, msg.content, false);
+                addMessage(msg.role, msg.content, msg.files, false);
             });
 
             renderChatList();
             scrollToBottom();
         }
 
-        // Update chat title based on first message
         function updateChatTitle(chatId, title) {
             const chat = chats.find(c => c.id === chatId);
             if (chat) {
@@ -615,7 +744,6 @@
             }
         }
 
-        // Delete chat
         function deleteChat(chatId, event) {
             event.stopPropagation();
             
@@ -635,7 +763,6 @@
             }
         }
 
-        // Clear current chat
         function clearCurrentChat() {
             if (!currentChatId) return;
             
@@ -644,7 +771,7 @@
                 if (chat) {
                     chat.messages = [{
                         role: 'assistant',
-                        content: "Hello! I'm Claude, powered by Puter.js. I'm especially good at helping with code and technical tasks. How can I assist you today?"
+                        content: "Hello! I'm Claude, powered by Puter.js. I can help with code, analyze images, and read documents. How can I assist you today?"
                     }];
                     saveChats();
                     loadChat(currentChatId);
@@ -652,7 +779,6 @@
             }
         }
 
-        // Render chat list
         function renderChatList() {
             if (chats.length === 0) {
                 chatList.innerHTML = '<div class="empty-state">No chats yet. Start a new conversation!</div>';
@@ -685,13 +811,64 @@
             }).join('');
         }
 
-        // Auto-resize textarea
+        fileUploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            
+            for (const file of files) {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    attachedFiles.push({
+                        name: file.name,
+                        type: file.type,
+                        data: e.target.result,
+                        size: file.size
+                    });
+                    renderAttachedFiles();
+                };
+
+                if (file.type.startsWith('image/')) {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            fileInput.value = '';
+        });
+
+        function renderAttachedFiles() {
+            if (attachedFiles.length === 0) {
+                attachedFilesPreview.innerHTML = '';
+                attachedFilesPreview.style.display = 'none';
+                return;
+            }
+
+            attachedFilesPreview.style.display = 'flex';
+            attachedFilesPreview.innerHTML = attachedFiles.map((file, index) => {
+                const isImage = file.type.startsWith('image/');
+                return `
+                    <div class="file-preview">
+                        ${isImage ? `<img src="${file.data}" alt="${file.name}">` : '📄'}
+                        <span class="file-preview-name">${file.name}</span>
+                        <button class="remove-file-btn" onclick="removeFile(${index})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function removeFile(index) {
+            attachedFiles.splice(index, 1);
+            renderAttachedFiles();
+        }
+
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Send message on Enter
         messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -699,12 +876,11 @@
             }
         });
 
-        // Event listeners
         sendBtn.addEventListener('click', sendMessage);
         newChatBtn.addEventListener('click', createNewChat);
         clearChatBtn.addEventListener('click', clearCurrentChat);
 
-        function addMessage(role, content, saveToHistory = true) {
+        function addMessage(role, content, files = null, saveToHistory = true) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
             
@@ -715,6 +891,22 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
             
+            if (files && files.length > 0) {
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = file.data;
+                        img.alt = file.name;
+                        contentDiv.appendChild(img);
+                    } else {
+                        const fileDiv = document.createElement('div');
+                        fileDiv.className = 'attached-file';
+                        fileDiv.textContent = `📎 ${file.name}`;
+                        contentDiv.appendChild(fileDiv);
+                    }
+                });
+            }
+            
             if (role === 'assistant') {
                 let html = marked.parse(content);
                 html = html.replace(/<pre><code class="language-(\w+)">/g, function(match, lang) {
@@ -723,9 +915,13 @@
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div><pre><code class="language-${lang}">`;
                 });
-                contentDiv.innerHTML = html;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                contentDiv.appendChild(tempDiv);
             } else {
-                contentDiv.textContent = content;
+                const textP = document.createElement('p');
+                textP.textContent = content;
+                contentDiv.appendChild(textP);
             }
             
             messageDiv.appendChild(avatar);
@@ -733,15 +929,17 @@
             messagesContainer.appendChild(messageDiv);
             
             if (saveToHistory) {
-                conversationHistory.push({ role, content });
+                const msgData = { role, content };
+                if (files && files.length > 0) {
+                    msgData.files = files;
+                }
+                conversationHistory.push(msgData);
                 
-                // Update chat in storage
                 const chat = chats.find(c => c.id === currentChatId);
                 if (chat) {
                     chat.messages = [...conversationHistory];
                     chat.date = new Date().toISOString();
                     
-                    // Update title with first user message
                     if (role === 'user' && chat.messages.filter(m => m.role === 'user').length === 1) {
                         updateChatTitle(currentChatId, content);
                     }
@@ -786,33 +984,47 @@
 
         async function sendMessage() {
             const message = messageInput.value.trim();
-            if (!message) return;
+            if (!message && attachedFiles.length === 0) return;
 
-            // Create new chat if none exists
             if (!currentChatId) {
                 createNewChat();
             }
 
             messageInput.disabled = true;
             sendBtn.disabled = true;
+            fileUploadBtn.disabled = true;
 
-            addMessage('user', message);
+            const filesToSend = [...attachedFiles];
+            
+            addMessage('user', message || 'Analyzing file...', filesToSend.length > 0 ? filesToSend : null);
             messageInput.value = '';
             messageInput.style.height = 'auto';
+            attachedFiles = [];
+            renderAttachedFiles();
 
             addTypingIndicator();
 
             try {
-                // Prepare conversation history for API
-                const messages = conversationHistory.map(msg => ({
+                let promptText = message;
+                
+                // Prepare message with file context
+                if (filesToSend.length > 0) {
+                    promptText = message || 'Please analyze these files:';
+                }
+
+                const messages = conversationHistory.slice(0, -1).map(msg => ({
                     role: msg.role,
                     content: msg.content
                 }));
 
-                const response = await puter.ai.chat(message, {
+                const response = await puter.ai.chat(promptText, {
                     model: 'claude-sonnet-4-5',
                     stream: true,
-                    messages: messages.slice(0, -1) // Exclude the message we just added
+                    messages: messages,
+                    attachments: filesToSend.map(f => ({
+                        type: f.type,
+                        data: f.data
+                    }))
                 });
 
                 removeTypingIndicator();
@@ -849,7 +1061,6 @@
                     }
                 }
 
-                // Save assistant response
                 conversationHistory.push({ role: 'assistant', content: fullResponse });
                 const chat = chats.find(c => c.id === currentChatId);
                 if (chat) {
@@ -879,6 +1090,7 @@
             } finally {
                 messageInput.disabled = false;
                 sendBtn.disabled = false;
+                fileUploadBtn.disabled = false;
                 messageInput.focus();
             }
         }
@@ -897,7 +1109,6 @@
             });
         }
 
-        // Initialize
         loadChats();
         if (chats.length === 0) {
             createNewChat();
