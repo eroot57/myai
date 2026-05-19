@@ -1,34 +1,28 @@
-async function sendMessage() {
-    const userInput = document.getElementById('user-input').value;
-    const fileInput = document.getElementById('file-upload').files[0];
+async function generateVideo() {
+    const prompt = document.getElementById('prompt-input').value.trim();
+    if (!prompt) return;
 
-    if (userInput || fileInput) {
-        const chatBox = document.getElementById('chat-box');
-        const userMessage = document.createElement('div');
-        userMessage.className = 'user-message';
-        userMessage.textContent = userInput;
-        chatBox.appendChild(userMessage);
+    const generateBtn = document.getElementById('generateBtn');
+    const status = document.getElementById('status');
+    const output = document.getElementById('video-output');
 
-        const response = await fetch('https://api.puter.com/v1/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer YOUR_API_KEY'  // Replace with your actual API key
-            },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-5',
-                messages: [{ role: 'user', content: userInput }],
-                files: fileInput ? [fileInput] : []
-            })
+    generateBtn.disabled = true;
+    status.textContent = 'Generating video...';
+    output.innerHTML = '';
+    status.className = '';
+
+    try {
+        const video = await puter.ai.txt2vid({
+            prompt,
+            model: 'wan-ai/wan2.7-t2v',
         });
-
-        const data = await response.json();
-        const assistantMessage = document.createElement('div');
-        assistantMessage.className = 'assistant-message';
-        assistantMessage.textContent = data.choices[0].message.content;
-        chatBox.appendChild(assistantMessage);
-
-        document.getElementById('user-input').value = '';
-        document.getElementById('file-upload').value = '';
+        output.appendChild(video);
+        status.textContent = '';
+    } catch (error) {
+        console.error('Error:', error);
+        status.className = 'error';
+        status.textContent = `Error: ${error.message || 'Video generation failed'}`;
+    } finally {
+        generateBtn.disabled = false;
     }
 }
